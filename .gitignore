@@ -1,0 +1,17 @@
+# Terraform local state and lock files
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+.terraform/
+
+# Editor / OS
+.DS_Store
+*.swp
+
+# Commit:
+# - .tf files
+# - .terraform.lock.hcl  (provider version lock — DO commit)
+# - terraform.tfvars.example (template — DO commit)

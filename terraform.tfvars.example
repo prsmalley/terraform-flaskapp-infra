@@ -1,0 +1,5 @@
+# Copy this file to terraform.tfvars and fill in your values.
+# terraform.tfvars is gitignored.
+
+ssh_public_key_path = "/Users/yourname/.ssh/id_ed25519.pub"
+my_ip               = "1.2.3.4"   # find via: curl -s https://api.ipify.org
