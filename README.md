@@ -1,15 +1,30 @@
 # terraform-flaskapp-infra
 
-Terraform that provisions an AWS EC2 instance to host a k3s cluster running
-[ARC ephemeral GitHub Actions runners](https://github.com/actions/actions-runner-controller).
-Ansible (in [ansible-playground](https://github.com/prsmalley/ansible-playground))
-bootstraps k3s on top. The
-[flaskapp-docker-practice](https://github.com/prsmalley/flaskapp-docker-practice)
-container is deployed to that cluster.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Part of a three-repo CI/CD/CD design — see
-[ARCHITECTURE.md](https://github.com/prsmalley/ansible-playground/blob/main/ARCHITECTURE.md)
-in ansible-playground.
+**Status:** EC2 currently provisioned and serving as the k3s host for the flaskapp deployment (last `terraform apply` 2026-05-20). Inbound is restricted to operator IP via the security group.
+
+This repo owns the AWS infrastructure: a single EC2 instance, SSH key pair, and security group. It's one of three repos that together build, provision, and deploy a Flask app to a k3s cluster on AWS EC2:
+
+- **[flaskapp-docker-practice](https://github.com/prsmalley/flaskapp-docker-practice)** — builds and publishes the container image to GHCR.
+- **terraform-flaskapp-infra** — provisions the EC2 host.
+- **[ansible-playground](https://github.com/prsmalley/ansible-playground)** — bootstraps k3s and deploys the app via ephemeral self-hosted runners (ARC) running inside the cluster.
+
+See [ARCHITECTURE.md](https://github.com/prsmalley/ansible-playground/blob/main/ARCHITECTURE.md) for the full design.
+
+```mermaid
+flowchart LR
+    A[flaskapp-docker-practice] -->|CI + release| GHCR[(GHCR)]
+    B[terraform-flaskapp-infra] -.provisions.-> EC2
+    C[ansible-playground] -.bootstraps.-> k3s
+    C --> Runner
+    subgraph EC2[AWS EC2]
+        subgraph k3s[k3s cluster]
+            Runner[ARC runner pod] -->|kubectl apply| APP[flaskapp pods]
+        end
+    end
+    GHCR -.image pull.-> APP
+```
 
 ## Repo layout
 
@@ -32,7 +47,7 @@ in ansible-playground.
   - `80/tcp` — HTTP (for the deployed app)
   - `6443/tcp` — Kubernetes API (for remote `kubectl`)
 - No `user_data` — Ansible handles the host bootstrap (see ansible-playground).
-- Outputs the public IP and a ready-to-paste SSH command.
+- Outputs the public IP, public DNS, instance ID, and a ready-to-paste SSH command.
 
 ## Prerequisites
 
@@ -96,6 +111,9 @@ This is a learning-grade setup. Real production would add:
   exposure; ops access via AWS-authenticated channels.
 - **Packer-baked AMI** with k3s pre-installed, eliminating the manual
   Ansible bootstrap step.
+- **CI for the Terraform code itself** — `terraform fmt -check`,
+  `terraform validate`, `tflint`, and `tfsec` on every PR. Currently
+  checked locally only.
 
 ## License
 
