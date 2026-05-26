@@ -79,7 +79,9 @@ resource "aws_instance" "main" {
   key_name               = aws_key_pair.main.key_name
   vpc_security_group_ids = [aws_security_group.main.id]
 
-
+  lifecycle {
+    ignore_changes = [ami]
+  }
 
 
   tags = {
