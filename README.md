@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Status:** EC2 currently provisioned and serving as the k3s host for the flaskapp deployment (last `terraform apply` 2026-05-20). Inbound is restricted to operator IP via the security group.
+**Status:** EC2 currently provisioned and hosting the flaskapp deployment, **live at https://flaskapp.prsmalley.dev/health** via Cloudflare Tunnel. Inbound on the SG is still restricted to operator IP — Cloudflare reaches the app via an outbound-initiated tunnel, not through SG inbound rules.
 
 This repo owns the AWS infrastructure: a single EC2 instance, SSH key pair, and security group. It's one of three repos that together build, provision, and deploy a Flask app to a k3s cluster on AWS EC2:
 
@@ -104,8 +104,10 @@ This is a learning-grade setup. Real production would add:
   public subnet. The default VPC keeps everything in public subnets.
 - **IAM Role attached to the instance** instead of using static AWS
   credentials. The instance assumes the role via the metadata service.
-- **ALB + ACM cert + Route 53** for HTTPS on a real domain. The app is
-  currently reachable as `http://<EC2-IP>` only.
+- **ALB + ACM cert + Route 53** — the AWS-native alternative to the
+  current Cloudflare Tunnel setup. Required for environments that
+  mandate AWS-only networking; otherwise overkill for single-instance
+  deploys (~$200/yr vs ~$10/yr for the Cloudflare path).
 - **Auto Scaling Group + multi-AZ** for high availability.
 - **Bastion + Session Manager** instead of inbound SSH. No public port 22
   exposure; ops access via AWS-authenticated channels.
