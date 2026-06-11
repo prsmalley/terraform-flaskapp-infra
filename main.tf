@@ -79,6 +79,15 @@ resource "aws_instance" "main" {
   key_name               = aws_key_pair.main.key_name
   vpc_security_group_ids = [aws_security_group.main.id]
 
+  # 20GB gp3 root volume. The AMI default (8GB) filled with container
+  # images and tripped kubelet DiskPressure evictions (2026-06-11).
+  # Resize is in-place; afterwards grow the filesystem on the host:
+  #   sudo growpart /dev/nvme0n1 1 && sudo resize2fs /dev/nvme0n1p1
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
+
   lifecycle {
     ignore_changes = [ami]
   }
